@@ -1,20 +1,29 @@
 from torchvision.models import vgg19, VGG19_Weights
-import torch
-from src.data_loader import train_dataloader
+import torch.nn as nn
 
-weights = VGG19_Weights.IMAGENET1K_V1
-vgg = vgg19(weights=weights).features.eval()
+class VGGFeatureExtractor(nn.Module):
+    def __init__(self, model, style_layers, content_layers):
+        super(VGGFeatureExtractor, self).__init__()
+        self.model = model
+        self.style_layers = style_layers
+        self.content_layers = content_layers
+        self.layers = {str(i) : layer for i, layer in enumerate(model)}
 
-data_loader = train_dataloader
-
-with torch.inference_mode():
-    for param in vgg.parameters():
-        param.requires_grad = False
-
-    for content_batch, style_batch in data_loader:
-        content_features = vgg(content_batch)
-        style_features = vgg(style_batch)
-        print("Content features shape:", content_features.shape)
-        print("Style features shape:", style_features.shape)
-        break  # Just to test one batch
+    def forward(self, x):
+        style_features = {}
+        content_features = {}
+        for name, layer in self.layers.items():
+            x = layer(x)
+            if name in self.style_layers:
+                style_features[name] = x
+            if name in self.content_layers:
+                content_features[name] = x
+        return {"content": content_features, 'style': style_features}
     
+def get_vgg_feature_extractor():
+    weights = VGG19_Weights.IMAGENET1K_V1
+    vgg = vgg19(weights=weights).features.eval()
+    style_layers = ['0', '5', '10', '19', '28']
+    content_layers = ['21']
+    feature_extractor = VGGFeatureExtractor(vgg, style_layers, content_layers)
+    return feature_extractor
