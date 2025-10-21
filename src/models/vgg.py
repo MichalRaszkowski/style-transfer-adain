@@ -24,6 +24,6 @@ def get_vgg_feature_extractor():
     weights = VGG19_Weights.IMAGENET1K_V1
     vgg = vgg19(weights=weights).features.eval()
     style_layers = ['0', '5', '10', '19', '28']
-    content_layers = ['21']
+    content_layers = ['0','21']
     feature_extractor = VGGFeatureExtractor(vgg, style_layers, content_layers)
     return feature_extractor
