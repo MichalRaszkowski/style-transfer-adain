@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader
 from src.dataset import DecoderDataset
 
 # change it later to bigger dataset
-content_dataset_name = "CongWei1230/objectswap_coco_s0_100_samples"
+content_dataset_name = "wangwangxuebing/train_COCO_data2014_jpg"
 
 style_dataset_name = "newsletter/HiDream-I1-Artists"
 
@@ -11,7 +11,7 @@ style_dataset_name = "newsletter/HiDream-I1-Artists"
 train_dataset = DecoderDataset(
     content_dataset_name=content_dataset_name,
     style_dataset_name=style_dataset_name,
-    content_split="train",
+    content_split="test",
     style_split="train",
     image_size=256,
     streaming=True,
