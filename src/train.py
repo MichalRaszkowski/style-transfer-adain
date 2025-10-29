@@ -55,3 +55,6 @@ for epoch in range(5):
         optimizer.step()
 
         print(f"Loss: {loss.item():.4f}")
+    
+    torch.save(decoder.state_dict(), "decoder.pth")
+    print("✅ Zapisano model: decoder.pth")

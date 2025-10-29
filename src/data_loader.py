@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import DataLoader
 from src.dataset import DecoderDataset
 
-# change it later to bigger dataset
 content_dataset_name = "wangwangxuebing/train_COCO_data2014_jpg"
 
 style_dataset_name = "newsletter/HiDream-I1-Artists"
@@ -24,3 +23,4 @@ for content_batch, style_batch in train_dataloader:
     print("Content batch shape:", content_batch.shape)
     print("Style batch shape:", style_batch.shape)
     break  # Just to test one batch
+
