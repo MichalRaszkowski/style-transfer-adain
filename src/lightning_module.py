@@ -1,84 +1,165 @@
+# import torch
+# import torch.nn as nn
+# import lightning as L
+# from src.models.net import VGGEncoder, Decoder, adain, calc_mean_std
+
+# class StyleTransferModule(L.LightningModule):
+#     def __init__(
+#         self,
+#         content_weight=1.0,
+#         style_weight=10.0,
+#         learning_rate=1e-4
+#     ):
+#         super().__init__()
+#         self.save_hyperparameters()
+
+#         self.encoder = VGGEncoder()
+#         self.decoder = Decoder()
+#         self.mse_loss = nn.MSELoss()
+
+#         self.register_buffer('vgg_mean', torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1))
+#         self.register_buffer('vgg_std', torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1))
+
+#     def normalize_vgg(self, x):
+#         return (x - self.vgg_mean) / self.vgg_std
+
+#     def forward(self, content_img, style_img, alpha=1.0, return_last=False):
+#         # 1. Liczymy cechy RAZ
+#         c_feats = self.encoder(self.normalize_vgg(content_img))
+#         s_feats = self.encoder(self.normalize_vgg(style_img))
+
+#         c_feat = c_feats[3]
+#         s_feat = s_feats[3]
+
+#         # 2. AdaIN
+#         t = adain(c_feat, s_feat)
+
+#         # 3. Alpha blending
+#         if alpha < 1.0: # (lub bez ifa, jak ustaliliśmy wcześniej)
+#              t = alpha * t + (1 - alpha) * c_feat
+            
+#         g_img = self.decoder(t)
+        
+#         # 4. Zwracamy też s_feats jeśli jesteśmy w treningu
+#         if return_last:
+#             return g_img, t, s_feats
+            
+#         return g_img, t
+
+#     def training_step(self, batch, batch_idx):
+#         content_img, style_img = batch
+
+#         g_img, t, s_feats = self(content_img, style_img, return_last=True)
+
+#         g_img_norm = self.normalize_vgg(g_img)
+#         g_feats = self.encoder(g_img_norm)
+        
+#         content_loss = self.mse_loss(g_feats[3], t)
+
+#         style_loss = 0.0
+#         for g_f, s_f in zip(g_feats, s_feats):
+#             g_mean, g_std = calc_mean_std(g_f)
+#             s_mean, s_std = calc_mean_std(s_f)
+#             style_loss += self.mse_loss(g_mean, s_mean) + self.mse_loss(g_std, s_std)
+
+#         loss = (self.hparams.content_weight * content_loss) + \
+#                (self.hparams.style_weight * style_loss)
+
+#         self.log("loss/train", loss, prog_bar=True)
+#         self.log("loss/content", content_loss)
+#         self.log("loss/style", style_loss)
+
+#         return loss
+
+#     def configure_optimizers(self):
+#         return torch.optim.Adam(self.decoder.parameters(), lr=self.hparams.learning_rate)
+
 import torch
 import torch.nn as nn
 import lightning as L
-
-from src.models.vgg import get_vgg_feature_extractor
-from src.models.decoder import Decoder
-from src.models.adain import adain
-
+from src.models import VGGEncoder, Decoder, adain, calc_mean_std
+from torchmetrics.image import StructuralSimilarityIndexMeasure
 
 class StyleTransferModule(L.LightningModule):
-    def __init__(
-        self,
-        content_weight=1.0,
-        style_weight=10.0,
-        learning_rate=1e-4
-    ):
+    def __init__(self, content_weight=1.0, style_weight=10.0, learning_rate=1e-4):
         super().__init__()
-
         self.save_hyperparameters()
 
-        self.vgg = get_vgg_feature_extractor()
+        self.encoder = VGGEncoder()
         self.decoder = Decoder()
+        self.mse_loss = nn.MSELoss()
 
-        self.mse = nn.MSELoss()
+        self.register_buffer('vgg_mean', torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1))
+        self.register_buffer('vgg_std', torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1))
 
-        for p in self.vgg.parameters():
-            p.requires_grad = False
+        self.metric_ssim = StructuralSimilarityIndexMeasure(data_range=1.0)
 
-    def forward(self, content_img, style_img):
-        c_feats = self.vgg(content_img)["content"]
-        s_feats = self.vgg(style_img)["style"]
+    def normalize_vgg(self, x):
+        return (x - self.vgg_mean) / self.vgg_std
 
-        c_feat = c_feats["21"]
-        s_feat = s_feats["28"]
+    def forward(self, content_img, style_img, alpha=1.0):
+        content_feats = self.encoder(self.normalize_vgg(content_img))
+        style_feats = self.encoder(self.normalize_vgg(style_img))
+        
+        content_feat = content_feats[3]
+        style_feat = style_feats[3]
+        
+        target = adain(content_feat, style_feat)
+        
+        if alpha < 1.0:
+            target = alpha * target + (1 - alpha) * content_feat
+            
+        generated_img = self.decoder(target)
+        return generated_img, target
 
-        t = adain(c_feat, s_feat)
+    def calculate_loss(self, content_img, style_img):
+        generated_img, target = self(content_img, style_img)
+        
+        g_img_norm = self.normalize_vgg(generated_img)
+        g_feats = self.encoder(g_img_norm)
+        
+        content_loss = self.mse_loss(g_feats[3], target)
+        
+        s_feats = self.encoder(self.normalize_vgg(style_img))
+        style_loss = 0.0
+        for g_f, s_f in zip(g_feats, s_feats):
+            g_mean, g_std = calc_mean_std(g_f)
+            s_mean, s_std = calc_mean_std(s_f)
+            style_loss += self.mse_loss(g_mean, s_mean) + self.mse_loss(g_std, s_std)
 
-        out = self.decoder(t)
-
-        return out, t
+        total_loss = (self.hparams.content_weight * content_loss) + \
+                     (self.hparams.style_weight * style_loss)
+                     
+        return total_loss, content_loss, style_loss
 
     def training_step(self, batch, batch_idx):
-        content_img, style_img = batch
+        loss, c_loss, s_loss = self.calculate_loss(*batch)
+        self.log("train/loss", loss, prog_bar=True)
+        self.log("train/content", c_loss)
+        self.log("train/style", s_loss)
+        return loss
 
-        generated_img, t = self(content_img, style_img)
-
-        gen_feats = self.vgg(generated_img)
-        c_feats = self.vgg(content_img)
-        s_feats = self.vgg(style_img)
-
-        content_loss = self.mse(
-            gen_feats["content"]["21"],
-            t
+    def validation_step(self, batch, batch_idx):
+        c, s = batch
+        generated_img, _ = self(c, s)
+        ssim_score = self.metric_ssim(
+            torch.clamp(generated_img, 0, 1), 
+            torch.clamp(c, 0, 1)
         )
+        self.log("val/ssim", ssim_score, on_step=False, on_epoch=True, prog_bar=True)
+        
+        loss, c_loss, s_loss = self.calculate_loss(*batch)
+        self.log("val/loss", loss, prog_bar=True)
+        self.log("val/content", c_loss)
+        self.log("val/style", s_loss)
+        return loss
 
-        style_loss = 0.0
-        for layer in s_feats["style"]:
-            gen_f = gen_feats["style"][layer]
-            style_f = s_feats["style"][layer]
-
-            style_loss += self.mse(
-                gen_f.mean([2, 3]),
-                style_f.mean([2, 3])
-            ) + self.mse(
-                gen_f.std([2, 3]),
-                style_f.std([2, 3])
-            )
-
-        loss = (
-            self.hparams.content_weight * content_loss +
-            self.hparams.style_weight * style_loss
-        )
-
-        self.log("train_loss", loss)
-        self.log("content_loss", content_loss)
-        self.log("style_loss", style_loss)
-
+    def test_step(self, batch, batch_idx):
+        loss, c_loss, s_loss = self.calculate_loss(*batch)
+        self.log("test/loss", loss)
+        self.log("test/content", c_loss)
+        self.log("test/style", s_loss)
         return loss
 
     def configure_optimizers(self):
-        return torch.optim.Adam(
-            self.decoder.parameters(),
-            lr=self.hparams.learning_rate
-        )
+        return torch.optim.Adam(self.decoder.parameters(), lr=self.hparams.learning_rate)

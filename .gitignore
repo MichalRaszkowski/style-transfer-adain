@@ -2,3 +2,10 @@
 *.py[cod]
 __pycache__/
 checkpoints/
+checkpoints_wandb/
+*.jpg
+*.png
+logs/
+wandb/
+images/
+lightning_logs/
