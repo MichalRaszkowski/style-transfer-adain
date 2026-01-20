@@ -34,10 +34,9 @@ def main():
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
-    print(f"Model: {args.ckpt}")
     
     try:
-        model = StyleTransferModule.load_from_checkpoint("checkpoints/style-transfer-best.ckpt", map_location=device)
+        model = StyleTransferModule.load_from_checkpoint("checkpoints/style-transfer-best-v2.ckpt", map_location=device)
         model.to(device)
         model.eval()
     except Exception as e:

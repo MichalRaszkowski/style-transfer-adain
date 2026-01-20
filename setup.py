@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 
-MODEL_URL = "https://huggingface.co/Michal-Raszkowski/adain-style-transfer/resolve/main/style-transfer-best.ckpt?download=true"
+MODEL_URL = "https://huggingface.co/Michal-Raszkowski/adain-style-transfer/resolve/main/style-transfer-best-v2.ckpt?download=true"
 CHECKPOINT_DIR = "checkpoints"
 CHECKPOINT_FILENAME = "style-transfer-best.ckpt"
 

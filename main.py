@@ -20,10 +20,10 @@ def main():
 
     model = StyleTransferModule(learning_rate=LR, content_weight=1.0, style_weight=10.0)
 
-    wandb_logger = WandbLogger(project="ADAIN-Style-Transfer", name="run-v4")
+    wandb_logger = WandbLogger(project="ADAIN-Style-Transfer", name="run-v5")
     
     checkpoint_callback = ModelCheckpoint(
-        dirpath="checkpoints/",
+        dirpath="checkpoints/v5",
         filename="{epoch}-{val/loss:.2f}",
         every_n_epochs=1,
         save_top_k=3,
@@ -42,10 +42,10 @@ def main():
         check_val_every_n_epoch=1
     )
 
-    #trainer.fit(model, datamodule=dm, ckpt_path="checkpoints/v4/epoch=133-val/loss=43.60.ckpt")
+    trainer.fit(model, datamodule=dm)
 
     #print("Testing on test set: ")
-    trainer.test(model, datamodule=dm, ckpt_path="checkpoints/v4/epoch=264-val/loss=40.02.ckpt")
+    #trainer.test(model, datamodule=dm, ckpt_path="checkpoints/v4/epoch=264-val/loss=40.02.ckpt")
 
 if __name__ == "__main__":
     main()

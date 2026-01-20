@@ -10,7 +10,7 @@ class StyleTransferDataModule(L.LightningDataModule):
         self.save_hyperparameters()
         
         self.content_name = "wangwangxuebing/train_COCO_data2014_jpg"
-        self.style_name = "newsletter/HiDream-I1-Artists"
+        self.style_name = "huggan/wikiart"
 
     def setup(self, stage=None):
         full_content = load_dataset(self.content_name, split="test")
