@@ -7,9 +7,9 @@ Implementation of **Arbitrary Style Transfer** using **AdaIN**. This project ena
 
 | Content | Style | Result |
 | :---: | :---: | :---: |
-| ![Content](images/content1.jpg) | ![Style](images/styl1.jpg) | ![Result](images/ostateczny1.jpg) |
-| ![Content](images/content2.jpg) | ![Style](images/styl2.jpg) | ![Result](images/ostateczny2.jpg) |
-| ![Content](images/content2.jpg) | ![Style](images/styl2.jpg) | ![Result](images/ostateczny3.jpg) |
+| ![Content](images/content1.jpg) | ![Style](images/styl1.jpg) | ![Result](images/result1.jpg) |
+| ![Content](images/content2.jpg) | ![Style](images/styl2.jpg) | ![Result](images/result2.jpg) |
+| ![Content](images/content3.jpg) | ![Style](images/styl3.jpg) | ![Result](images/result3.jpg) |
 
 ## Quick Start
 
@@ -26,9 +26,9 @@ python setup.py
 ```bash
 python stylize.py --content images/my_photo.jpg --style images/picasso.jpg
 ```
-You can also use:
---output: Filename for result
---alpha: Stylization strenght between 0.0 (original image) to 1.0 (most stylized)
+You can also use:  
+--output: Filename for result  
+--alpha: Stylization strenght between 0.0 (original image) to 1.0 (most stylized)  
 --size Resize content/style to this size before processing, default: 512.
 
 ## To run the web-based interface use:
