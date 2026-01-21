@@ -4,7 +4,7 @@ import subprocess
 
 MODEL_URL = "https://huggingface.co/Michal-Raszkowski/adain-style-transfer/resolve/main/style-transfer-best-v2.ckpt?download=true"
 CHECKPOINT_DIR = "checkpoints"
-CHECKPOINT_FILENAME = "style-transfer-best.ckpt"
+CHECKPOINT_FILENAME = "style-transfer-best-v2.ckpt"
 
 def install_requirements():
     print("Installing dependencies...")

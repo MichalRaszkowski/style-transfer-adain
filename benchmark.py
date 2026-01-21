@@ -2,7 +2,7 @@ import time
 import torch
 from src.lightning_module import StyleTransferModule
 
-CKPT_PATH = "checkpoints/v4/epoch=270-val/loss=40.12.ckpt"
+CKPT_PATH = "checkpoints/style-transfer-best-v2.ckpt"
 IMG_SIZE = 512
 LOOPS = 20
 

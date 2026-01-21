@@ -6,7 +6,7 @@ from PIL import Image
 from src.lightning_module import StyleTransferModule
 
 
-MODEL_URL = "https://huggingface.co/Michal-Raszkowski/adain-style-transfer/resolve/main/style-transfer-best.ckpt?download=true"
+MODEL_URL = "https://huggingface.co/Michal-Raszkowski/adain-style-transfer/resolve/main/style-transfer-best-v2.ckpt?download=true"
 CHECKPOINT_PATH = "model.ckpt"
 
 def download_model_if_missing():

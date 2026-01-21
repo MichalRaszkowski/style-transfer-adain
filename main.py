@@ -44,8 +44,8 @@ def main():
 
     trainer.fit(model, datamodule=dm)
 
-    #print("Testing on test set: ")
-    #trainer.test(model, datamodule=dm, ckpt_path="checkpoints/v4/epoch=264-val/loss=40.02.ckpt")
+    print("Testing on test set: ")
+    trainer.test(model, datamodule=dm, ckpt_path="checkpoints/style-transfer-best-v2.ckpt")
 
 if __name__ == "__main__":
     main()
